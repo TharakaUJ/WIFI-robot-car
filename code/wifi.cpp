@@ -1,0 +1,160 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ArduinoWebsockets.h>
+#include <ArduinoJson.h>
+#include "wifi_cred.h"
+#include "variablesAndParameters.h"
+
+using namespace websockets;
+
+WebsocketsServer webSocket;
+WebsocketsClient client;
+
+// Function to send messages to Serial and WebSocket
+void printSerialAndSend(const String message)
+{
+    if (Serial)
+    {
+        Serial.println(message);
+    }
+    if (client.available())
+    {
+        client.send(String(message));
+    }
+}
+
+// Send JSON data for `read` action
+void handleRead()
+{
+    Serial.println("Sending data to client");
+    DynamicJsonDocument doc(1024);
+    doc["action"] = "read";
+
+    doc["kpA"] = KpA;
+    doc["kiA"] = KiA;
+    doc["kdA"] = KdA;
+    doc["kpD"] = KpD;
+    doc["kdD"] = KdD;
+
+    doc["kpR"] = KpR;
+    doc["kdR"] = KdR;
+    doc["kpL"] = KpL;
+    doc["kdL"] = KdL;
+    doc["kpLR"] = KpLR;
+    doc["kdLR"] = KdLR;
+    doc["kpF"] = KpF;
+    doc["kdF"] = KdF;
+
+    doc["motorSpeed"] = motorSpeed;
+    doc["forward_threshold"] = forward_threshold;
+    doc["side_threshold"] = side_threshold;
+    doc["dist_to_single_wall"] = dist_to_single_wall;
+    doc["sensor_left"] = sensor_left;
+    doc["sensor_front"] = sensor_front;
+    doc["sensor_right"] = sensor_right;
+    doc["encoder_counts"] = encoder_counts;
+    doc["encoder_counts_per_cell"] = encoder_counts_per_cell;
+    doc["posL"] = posL;
+    doc["posR"] = posR;
+    doc["upload"] = upload;
+
+    String response;
+    serializeJson(doc, response);
+    client.send(response);
+}
+
+// Handle incoming WebSocket messages
+void handleWrite(const WebsocketsMessage &message)
+{
+    String payload = message.data(); // Extract message content as a String
+    Serial.println("Received: " + payload);
+    DynamicJsonDocument doc(1024);
+    DeserializationError error = deserializeJson(doc, payload.c_str()); // Use payload for deserialization
+
+    if (error)
+    {
+        Serial.println("Failed to parse JSON");
+        Serial.println(error.c_str());
+        return;
+    }
+
+    const char *action = doc["action"];
+    Serial.println(action);
+    if (strcmp(action, "write") == 0)
+    {
+        KpA = doc["kpA"] | KpA;
+        KiA = doc["kiA"] | KiA;
+        KdA = doc["kdA"] | KdA;
+        KpD = doc["kpD"] | KpD;
+        KdD = doc["kdD"] | KdD;
+
+        KpR = doc["kpR"] | KpR;
+        KdR = doc["kdR"] | KdR;
+        KpL = doc["kpL"] | KpL;
+        KdL = doc["kdL"] | KdL;
+        KpLR = doc["kpLR"] | KpLR;
+        KdLR = doc["kdLR"] | KdLR;
+        KpF = doc["kpF"] | KpF;
+        KdF = doc["kdF"] | KdF;
+
+        motorSpeed = doc["motorSpeed"] | motorSpeed;
+        forward_threshold = doc["forward_threshold"] | forward_threshold;
+        side_threshold = doc["side_threshold"] | side_threshold;
+        dist_to_single_wall = doc["dist_to_single_wall"] | dist_to_single_wall;
+        sensor_left = doc["sensor_left"] | sensor_left;
+        sensor_front = doc["sensor_front"] | sensor_front;
+        sensor_right = doc["sensor_right"] | sensor_right;
+        encoder_counts = doc["encoder_counts"] | encoder_counts;
+        encoder_counts_per_cell = doc["encoder_counts_per_cell"] | encoder_counts_per_cell;
+        posL = doc["posL"] | posL;
+        posR = doc["posR"] | posR;
+        upload = doc["upload"] | upload;
+    }
+    else if (strcmp(action, "read") == 0)
+    {
+        handleRead();
+    }
+}
+
+// Function to initialize Wi-Fi
+void setupWiFi()
+{
+    Serial.print("Connecting to Wi-Fi...");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\nConnected to Wi-Fi. IP: " + WiFi.localIP().toString());
+}
+
+void wifiSetup()
+{
+    setupWiFi(); // Initialize Wi-Fi
+
+    webSocket.listen(80); // Start WebSocket server
+    Serial.println("WebSocket server started. Connect to ws://" + WiFi.localIP().toString() + ":80");
+}
+
+void wifiLoop(void *parameter)
+{
+    for (;;)
+    {
+        // Infinite loop
+        if (!client.available())
+        {
+            client = webSocket.accept();
+            Serial.println("Client connected");
+        }
+        else
+        {
+            client.poll();
+            auto message = client.readBlocking();
+            handleWrite(message);
+            Serial.println("Message received");
+        }
+
+        vTaskDelay(100 / portTICK_PERIOD_MS); // Non-blocking delay
+    }
+}
