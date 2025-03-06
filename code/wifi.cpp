@@ -3,7 +3,7 @@
 #include <ArduinoWebsockets.h>
 #include <ArduinoJson.h>
 #include "wifi_cred.h"
-#include "variablesAndParameters.h"
+#include "wifi.h"
 
 using namespace websockets;
 
@@ -30,33 +30,7 @@ void handleRead()
     DynamicJsonDocument doc(1024);
     doc["action"] = "read";
 
-    doc["kpA"] = KpA;
-    doc["kiA"] = KiA;
-    doc["kdA"] = KdA;
-    doc["kpD"] = KpD;
-    doc["kdD"] = KdD;
-
-    doc["kpR"] = KpR;
-    doc["kdR"] = KdR;
-    doc["kpL"] = KpL;
-    doc["kdL"] = KdL;
-    doc["kpLR"] = KpLR;
-    doc["kdLR"] = KdLR;
-    doc["kpF"] = KpF;
-    doc["kdF"] = KdF;
-
-    doc["motorSpeed"] = motorSpeed;
-    doc["forward_threshold"] = forward_threshold;
-    doc["side_threshold"] = side_threshold;
-    doc["dist_to_single_wall"] = dist_to_single_wall;
-    doc["sensor_left"] = sensor_left;
-    doc["sensor_front"] = sensor_front;
-    doc["sensor_right"] = sensor_right;
-    doc["encoder_counts"] = encoder_counts;
-    doc["encoder_counts_per_cell"] = encoder_counts_per_cell;
-    doc["posL"] = posL;
-    doc["posR"] = posR;
-    doc["upload"] = upload;
+    // doc["kpA"] = KpA;
 
     String response;
     serializeJson(doc, response);
@@ -82,33 +56,9 @@ void handleWrite(const WebsocketsMessage &message)
     Serial.println(action);
     if (strcmp(action, "write") == 0)
     {
-        KpA = doc["kpA"] | KpA;
-        KiA = doc["kiA"] | KiA;
-        KdA = doc["kdA"] | KdA;
-        KpD = doc["kpD"] | KpD;
-        KdD = doc["kdD"] | KdD;
+        // KpA = doc["kpA"] | KpA;
 
-        KpR = doc["kpR"] | KpR;
-        KdR = doc["kdR"] | KdR;
-        KpL = doc["kpL"] | KpL;
-        KdL = doc["kdL"] | KdL;
-        KpLR = doc["kpLR"] | KpLR;
-        KdLR = doc["kdLR"] | KdLR;
-        KpF = doc["kpF"] | KpF;
-        KdF = doc["kdF"] | KdF;
 
-        motorSpeed = doc["motorSpeed"] | motorSpeed;
-        forward_threshold = doc["forward_threshold"] | forward_threshold;
-        side_threshold = doc["side_threshold"] | side_threshold;
-        dist_to_single_wall = doc["dist_to_single_wall"] | dist_to_single_wall;
-        sensor_left = doc["sensor_left"] | sensor_left;
-        sensor_front = doc["sensor_front"] | sensor_front;
-        sensor_right = doc["sensor_right"] | sensor_right;
-        encoder_counts = doc["encoder_counts"] | encoder_counts;
-        encoder_counts_per_cell = doc["encoder_counts_per_cell"] | encoder_counts_per_cell;
-        posL = doc["posL"] | posL;
-        posR = doc["posR"] | posR;
-        upload = doc["upload"] | upload;
     }
     else if (strcmp(action, "read") == 0)
     {
