@@ -12,7 +12,7 @@
 
 
 #define delay_time 50
-#define motor_increment_factor 0.5
+#define motor_increment_factor 0.8
 
 #define throttle_factor 150
 #define turn_factor 150

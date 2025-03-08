@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIFI Robot Car Interface</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        
+        .control-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 45%;
+        }
+        
+        .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .button-row {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .button {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #f0f0f0, #cacaca);
+            box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+            user-select: none;
+            transition: all 0.2s ease;
+            color: #444;
+        }
+        
+        .button:active {
+            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+            transform: scale(0.95);
+            background: linear-gradient(145deg, #cacaca, #f0f0f0);
+        }
+        
+        .spacer {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+        }
+        
+        .status-bar {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        
+        #ws-status {
+            font-weight: bold;
+        }
+        
+        .disconnected {
+            color: #ff4d4d;
+        }
+        
+        .connected {
+            color: #4dff4d;
+        }
+        
+        .error {
+            color: #ffcc4d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-pad">
+            <div class="title">TURNING</div>
+            <div class="button-row">
+                <div class="button" id="left">←</div>
+                <div class="spacer"></div>
+                <div class="button" id="right">→</div>
+            </div>
+        </div>
+        
+        <div class="control-pad">
+            <div class="title">THROTTLE</div>
+            <div class="button-row">
+                <div class="button" id="up">↑</div>
+            </div>
+            <div class="button-row">
+                <div class="button" id="down">↓</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        WebSocket Status: <span id="ws-status" class="disconnected">Disconnected</span>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://your-websocket-url');
+        const statusElement = document.getElementById('ws-status');
+        
+        // Initialize control values
+        let controlState = {
+            throttle: 0,  // forward/backward: -1, 0, 1
+            turn: 0       // left/right: -1, 0, 1
+        };
+        
+        // Keep track of last sent values to avoid redundant messages
+        let lastSentState = {...controlState};
+        
+        // For periodic sending
+        let sendInterval = null;
+        const SEND_INTERVAL_MS = 100; // Send every 100ms
+        
+        ws.onopen = () => {
+            statusElement.textContent = 'Connected';
+            statusElement.className = 'connected';
+            
+            // Start periodic sending
+            startPeriodicSending();
+        };
+
+        ws.onclose = () => {
+            statusElement.textContent = 'Disconnected';
+            statusElement.className = 'disconnected';
+            stopPeriodicSending();
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+            statusElement.textContent = 'Error';
+            statusElement.className = 'error';
+        };
+
+        function startPeriodicSending() {
+            if (sendInterval === null) {
+                sendInterval = setInterval(sendControlState, SEND_INTERVAL_MS);
+            }
+        }
+        
+        function stopPeriodicSending() {
+            if (sendInterval !== null) {
+                clearInterval(sendInterval);
+                sendInterval = null;
+            }
+        }
+        
+        function sendControlState() {
+            // Only send if values changed or connection just established
+            if (ws.readyState === WebSocket.OPEN && 
+                (controlState.throttle !== lastSentState.throttle || 
+                 controlState.turn !== lastSentState.turn)) {
+                
+                ws.send(JSON.stringify(controlState));
+                lastSentState = {...controlState};
+            }
+        }
+
+        // Handle button clicks
+        document.getElementById('up').addEventListener('mousedown', () => {
+            controlState.throttle = 1;
+            sendControlState(); // Send immediately on button press
+        });
+
+        document.getElementById('down').addEventListener('mousedown', () => {
+            controlState.throttle = -1;
+            sendControlState();
+        });
+
+        document.getElementById('left').addEventListener('mousedown', () => {
+            controlState.turn = -1;
+            sendControlState();
+        });
+
+        document.getElementById('right').addEventListener('mousedown', () => {
+            controlState.turn = 1;
+            sendControlState();
+        });
+
+        // Reset values on button release
+        document.addEventListener('mouseup', (event) => {
+            if (event.target.classList.contains('button')) {
+                if (event.target.id === 'up' || event.target.id === 'down') {
+                    controlState.throttle = 0;
+                } else if (event.target.id === 'left' || event.target.id === 'right') {
+                    controlState.turn = 0;
+                }
+                sendControlState();
+            }
+        });
+        
+        // Handle touch events for mobile devices
+        const buttons = document.querySelectorAll('.button');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent default touch behavior
+                
+                if (button.id === 'up') controlState.throttle = 1;
+                else if (button.id === 'down') controlState.throttle = -1;
+                else if (button.id === 'left') controlState.turn = -1;
+                else if (button.id === 'right') controlState.turn = 1;
+                
+                sendControlState();
+            });
+            
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                
+                if (button.id === 'up' || button.id === 'down') {
+                    controlState.throttle = 0;
+                } else if (button.id === 'left' || button.id === 'right') {
+                    controlState.turn = 0;
+                }
+                
+                sendControlState();
+            });
+        });
+    </script>
+</body>
+</html>
