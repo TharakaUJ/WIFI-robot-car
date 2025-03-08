@@ -2,4 +2,4 @@
 
 void wifiSetup();
 
-void wifiLoop(void *parameter);
+void wifiLoop();

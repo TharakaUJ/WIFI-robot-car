@@ -4,38 +4,12 @@
 #include <ArduinoJson.h>
 #include "wifi_cred.h"
 #include "wifi.h"
+#include "pinsAndVars.h"
 
 using namespace websockets;
 
 WebsocketsServer webSocket;
 WebsocketsClient client;
-
-// Function to send messages to Serial and WebSocket
-void printSerialAndSend(const String message)
-{
-    if (Serial)
-    {
-        Serial.println(message);
-    }
-    if (client.available())
-    {
-        client.send(String(message));
-    }
-}
-
-// Send JSON data for `read` action
-void handleRead()
-{
-    Serial.println("Sending data to client");
-    DynamicJsonDocument doc(1024);
-    doc["action"] = "read";
-
-    // doc["kpA"] = KpA;
-
-    String response;
-    serializeJson(doc, response);
-    client.send(response);
-}
 
 // Handle incoming WebSocket messages
 void handleWrite(const WebsocketsMessage &message)
@@ -56,13 +30,8 @@ void handleWrite(const WebsocketsMessage &message)
     Serial.println(action);
     if (strcmp(action, "write") == 0)
     {
-        // KpA = doc["kpA"] | KpA;
-
-
-    }
-    else if (strcmp(action, "read") == 0)
-    {
-        handleRead();
+        throttle = doc["throttle"] | 0;
+        turn = doc["turn"] | 0;
     }
 }
 
@@ -87,24 +56,18 @@ void wifiSetup()
     Serial.println("WebSocket server started. Connect to ws://" + WiFi.localIP().toString() + ":80");
 }
 
-void wifiLoop(void *parameter)
+void wifiLoop()
 {
-    for (;;)
+    if (!client.available())
     {
-        // Infinite loop
-        if (!client.available())
-        {
-            client = webSocket.accept();
-            Serial.println("Client connected");
-        }
-        else
-        {
-            client.poll();
-            auto message = client.readBlocking();
-            handleWrite(message);
-            Serial.println("Message received");
-        }
-
-        vTaskDelay(100 / portTICK_PERIOD_MS); // Non-blocking delay
+        client = webSocket.accept();
+        Serial.println("Client connected");
+    }
+    else
+    {
+        client.poll();
+        auto message = client.readBlocking();
+        handleWrite(message);
+        Serial.println("Message received");
     }
 }
