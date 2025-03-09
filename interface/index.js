@@ -1,4 +1,4 @@
-const ws = new WebSocket('ws://your-websocket-url');
+const ws = new WebSocket('ws://192.168.8.108:80');
 const statusElement = document.getElementById('ws-status');
 const keyIndicator = document.getElementById('key-indicator');
 const buttonElements = {

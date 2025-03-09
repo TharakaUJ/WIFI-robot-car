@@ -2,7 +2,7 @@
 
 // Defining the input pins for the motor
 #define PWML 4
-#define IN1L 16
+#define IN1L 13
 #define IN2L 17
 
 // Defining the input pins for the motor
@@ -18,8 +18,8 @@
 #define turn_factor 150
 
 
-extern int throttle = 0;
-extern int turn = 0;
+extern int throttle;
+extern int turn;
 
-extern int rightMotorSpeed = 0;
-extern int leftMotorSpeed = 0;
+extern int rightMotorSpeed;
+extern int leftMotorSpeed;
