@@ -25,14 +25,8 @@ void handleWrite(const WebsocketsMessage &message)
         Serial.println(error.c_str());
         return;
     }
-
-    const char *action = doc["action"];
-    Serial.println(action);
-    if (strcmp(action, "write") == 0)
-    {
-        throttle = doc["throttle"] | 0;
-        turn = doc["turn"] | 0;
-    }
+    throttle = doc["throttle"] | 0;
+    turn = doc["turn"] | 0;
 }
 
 // Function to initialize Wi-Fi
@@ -56,20 +50,26 @@ void wifiSetup()
     Serial.println("WebSocket server started. Connect to ws://" + WiFi.localIP().toString() + ":80");
 }
 
-void wifiLoop()
+void wifiLoop(void *parameter)
 {
-    if (!client.available())
+    for (;;)
     {
-        throttle = 0;
-        turn = 0;
-        client = webSocket.accept();
-        Serial.println("Client connected");
-    }
-    else
-    {
-        client.poll();
-        auto message = client.readBlocking();
-        handleWrite(message);
-        Serial.println("Message received");
+        // Infinite loop
+        if (!client.available())
+        {
+            throttle = 0;
+            turn = 0;
+            client = webSocket.accept();
+            Serial.println("Client connected");
+        }
+        else
+        {
+            client.poll();
+            auto message = client.readBlocking();
+            handleWrite(message);
+            Serial.println("Message received");
+        }
+
+        vTaskDelay(100 / portTICK_PERIOD_MS); // Non-blocking delay
     }
 }

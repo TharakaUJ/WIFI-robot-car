@@ -11,12 +11,22 @@ void setup()
     // wifi
     wifiSetup();
     motorcontrol_init();
+
+    // Create a FreeRTOS task for the WiFi loop
+    xTaskCreate(
+        wifiLoop,    // Task function
+        "WiFi Task", // Task name
+        4096,        // Stack size (in bytes)
+        NULL,        // Task parameters
+        1,           // Priority
+        NULL         // Task handle
+    );
 }
 
 void loop()
 {
     Serial.print("loop");
-    wifiLoop();
+    // wifiLoop();
 
     int newRightMotorSpeed, newLeftMotorSpeed;
 
@@ -26,5 +36,5 @@ void loop()
     constrain(newLeftMotorSpeed, 0, 255);
     constrain(newRightMotorSpeed, 0, 255);
 
-    motorspeed_control(newLeftMotorSpeed, newRightMotorSpeed);  
+    motorspeed_control(newLeftMotorSpeed, newRightMotorSpeed);
 }
