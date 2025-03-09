@@ -60,6 +60,8 @@ void wifiLoop()
 {
     if (!client.available())
     {
+        throttle = 0;
+        turn = 0;
         client = webSocket.accept();
         Serial.println("Client connected");
     }

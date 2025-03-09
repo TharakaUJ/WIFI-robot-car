@@ -23,5 +23,8 @@ void loop()
     newRightMotorSpeed = throttle * throttle_factor + turn * turn_factor;
     newLeftMotorSpeed = throttle * throttle_factor - turn * turn_factor;
 
+    constrain(newLeftMotorSpeed, 0, 255);
+    constrain(newRightMotorSpeed, 0, 255);
+
     motorspeed_control(newLeftMotorSpeed, newRightMotorSpeed);  
 }
