@@ -11,7 +11,7 @@
 #define IN2R 19
 
 
-#define delay_time 50
+#define delay_time 250
 #define motor_increment_factor 0.8
 
 #define throttle_factor 150

@@ -13,11 +13,18 @@ void motorcontrol_init()
     pinMode(IN2R, OUTPUT);
 }
 
-
 void motorspeed_control(int current_speed_left, int current_speed_right)
 {
     leftMotorSpeed += (current_speed_left - leftMotorSpeed) * motor_increment_factor;
     rightMotorSpeed += (current_speed_right - rightMotorSpeed) * motor_increment_factor;
+
+    leftMotorSpeed = constrain(leftMotorSpeed, -255, 255);
+    rightMotorSpeed = constrain(rightMotorSpeed, -255, 255);
+
+    Serial.print("Left Motor Speed: ");
+    Serial.println(leftMotorSpeed);
+    Serial.print("Right Motor Speed: ");
+    Serial.println(rightMotorSpeed);
 
     if (leftMotorSpeed > 0)
     {
