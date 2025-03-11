@@ -27,6 +27,13 @@ void handleWrite(const WebsocketsMessage &message)
     }
     throttle = doc["throttle"] | 0;
     turn = doc["turn"] | 0;
+
+    doc["throttle"] = throttle;
+    doc["turn"] = turn;
+
+    String response;
+    serializeJson(doc, response);
+    client.send(response);
 }
 
 // Function to initialize Wi-Fi

@@ -2,7 +2,7 @@
 
 // Defining the input pins for the motor
 #define PWML 4
-#define IN1L 13
+#define IN1L 16
 #define IN2L 17
 
 // Defining the input pins for the motor
@@ -11,11 +11,11 @@
 #define IN2R 19
 
 
-#define delay_time 250
-#define motor_increment_factor 0.8
+#define delay_time 60
+#define motor_increment_factor 1
 
-#define throttle_factor 150
-#define turn_factor 150
+#define throttle_factor 120
+#define turn_factor 120
 
 
 extern int throttle;
