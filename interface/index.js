@@ -1,4 +1,4 @@
-const ws = new WebSocket('ws://192.168.8.108:80');
+const ws = new WebSocket('ws://192.168.8.122:80');
 const statusElement = document.getElementById('ws-status');
 const keyIndicator = document.getElementById('key-indicator');
 const buttonElements = {
@@ -81,8 +81,8 @@ function updateKeyIndicator() {
     
     if (controlState.throttle === 1) activeControls.push('Forward');
     if (controlState.throttle === -1) activeControls.push('Backward');
-    if (controlState.turn === -1) activeControls.push('Left');
-    if (controlState.turn === 1) activeControls.push('Right');
+    if (controlState.turn === 1) activeControls.push('Left');
+    if (controlState.turn === -1) activeControls.push('Right');
     
     keyIndicator.textContent = activeControls.length > 0 ? 
         activeControls.join(' + ') : 'No movement';
@@ -91,8 +91,8 @@ function updateKeyIndicator() {
 function updateButtonVisualState() {
     buttonElements.up.classList.toggle('active', controlState.throttle === 1);
     buttonElements.down.classList.toggle('active', controlState.throttle === -1);
-    buttonElements.left.classList.toggle('active', controlState.turn === -1);
-    buttonElements.right.classList.toggle('active', controlState.turn === 1);
+    buttonElements.left.classList.toggle('active', controlState.turn === 1);
+    buttonElements.right.classList.toggle('active', controlState.turn === -1);
 }
 
 function updateControlState() {
@@ -103,8 +103,8 @@ function updateControlState() {
     // Update based on keys currently pressed
     if (keysPressed.ArrowUp) controlState.throttle = 1;
     if (keysPressed.ArrowDown) controlState.throttle = -1;
-    if (keysPressed.ArrowLeft) controlState.turn = -1;
-    if (keysPressed.ArrowRight) controlState.turn = 1;
+    if (keysPressed.ArrowLeft) controlState.turn = 1;
+    if (keysPressed.ArrowRight) controlState.turn = -1;
     
     // Update the visual state of buttons
     updateButtonVisualState();
@@ -127,13 +127,13 @@ buttonElements.down.addEventListener('mousedown', () => {
 });
 
 buttonElements.left.addEventListener('mousedown', () => {
-    controlState.turn = -1;
+    controlState.turn = 1;
     updateButtonVisualState();
     sendControlState();
 });
 
 buttonElements.right.addEventListener('mousedown', () => {
-    controlState.turn = 1;
+    controlState.turn = -1;
     updateButtonVisualState();
     sendControlState();
 });
@@ -159,8 +159,8 @@ buttons.forEach(button => {
         
         if (button.id === 'up') controlState.throttle = 1;
         else if (button.id === 'down') controlState.throttle = -1;
-        else if (button.id === 'left') controlState.turn = -1;
-        else if (button.id === 'right') controlState.turn = 1;
+        else if (button.id === 'left') controlState.turn = 1;
+        else if (button.id === 'right') controlState.turn = -1;
         
         updateButtonVisualState();
         sendControlState();
